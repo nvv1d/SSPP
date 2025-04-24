@@ -54,12 +54,12 @@ const Subtitle = styled.p`
 `;
 
 const AuthMessage = styled.div`
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
   text-align: center;
-  max-width: 800px;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  margin: 2rem 0;
+  max-width: 500px;
   width: 100%;
 `;
 
@@ -83,15 +83,6 @@ const AboutSection = styled.section`
     line-height: 1.6;
     margin-bottom: 1rem;
   }
-`;
-
-const AuthMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 16px;
-  margin: 2rem 0;
-  max-width: 500px;
 `;
 
 function AppContent() {
