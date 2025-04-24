@@ -20,10 +20,16 @@ const googleProvider = new GoogleAuthProvider();
 // Google sign in function
 export const signInWithGoogle = async () => {
   try {
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    console.log("Initiating Google sign in...");
     const result = await signInWithPopup(auth, googleProvider);
+    console.log("Sign in successful:", result.user);
     return result.user;
   } catch (error) {
-    console.error("Error during Google sign in:", error);
+    console.error("Error during Google sign in:", error.code, error.message);
+    alert("Google sign in failed: " + error.message);
     return null;
   }
 };
