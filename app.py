@@ -39,10 +39,12 @@ def verify_auth():
         user_info = data.get('user_info')
 
         if not user_token:
+            logger.warning("Auth verification attempt with no token")
             return jsonify({'error': 'No token provided'}), 400
 
         # Log user login
         logger.info(f"User authenticated: {user_info.get('email') if user_info else 'unknown'}")
+        logger.info(f"Auth token received: {user_token[:20]}...")
 
         # In a production app, you would verify the token with Firebase Admin SDK
         # For this example, we'll assume the token is valid if it exists
@@ -55,6 +57,14 @@ def verify_auth():
     except Exception as e:
         logger.error(f"Authentication error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/auth/status', methods=['GET'])
+def auth_status():
+    return jsonify({
+        'status': 'ok',
+        'auth_enabled': True,
+        'message': 'Authentication service is running'
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
