@@ -60,11 +60,23 @@ function Login() {
   const { currentUser } = useAuth();
   
   const handleSignIn = async () => {
-    await signInWithGoogle();
+    console.log("Sign in button clicked");
+    try {
+      const user = await signInWithGoogle();
+      console.log("Sign in completed, user:", user);
+    } catch (error) {
+      console.error("Login component error:", error);
+    }
   };
   
   const handleSignOut = async () => {
-    await signOutUser();
+    console.log("Sign out button clicked");
+    try {
+      await signOutUser();
+      console.log("Sign out completed");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
   
   return (
