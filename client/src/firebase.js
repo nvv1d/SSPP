@@ -4,12 +4,12 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDtC7Uwb5pGAsdmrH2T4Gqdk5Mga07jYPM", // Using the same API key from sesame_ai/config.py
-  authDomain: "sesame-voice-ai.firebaseapp.com",
-  projectId: "sesame-voice-ai",
-  storageBucket: "sesame-voice-ai.appspot.com",
-  messagingSenderId: "1072000975600",
-  appId: "1:1072000975600:web:75b0bf3a9bb8d92e767835"
+  apiKey: "AIzaSyCH3_H6dA-Wp_yMrV0hSvyZOtbO4vzGuwY",
+  authDomain: "sspp-b3a48.firebaseapp.com",
+  projectId: "sspp-b3a48",
+  storageBucket: "sspp-b3a48.appspot.com",
+  messagingSenderId: "1057298517910",
+  appId: "1:1057298517910:web:75b0bf3a9bb8d92e767835" // You might need to update this with the correct appId
 };
 
 // Initialize Firebase
