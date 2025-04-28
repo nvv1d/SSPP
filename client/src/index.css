@@ -1,16 +1,49 @@
 
+:root {
+  --green1: #5B652A;
+  --green2: #7E8460;
+  --green3: #9B9F84;
+  --green4: #C0C2B2;
+  --green5: #DBDCD2;
+  --green6: #F1F1ED;
+  --green7: #F9F9F7;
+  --s4: 4px;
+  --s6: 6px;
+  --s8: 8px;
+  --s10: 10px;
+  --s12: 12px;
+  --s16: 16px;
+  --s18: 18px;
+  --s20: 20px;
+  --s24: 24px;
+  --s28: 28px;
+  --s32: 32px;
+  --s40: 40px;
+  --s46: 46px;
+  --s60: 60px;
+  --s80: 80px;
+  --s90: 90px;
+  --s96: 96px;
+  --s120: 120px;
+  --s200: 200px;
+  --radius1: 16px;
+  --radius2: 8px;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #121212;
-  color: #ffffff;
+  background-color: white;
+  color: var(--green1);
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+button {
+  font-family: 'Inter', sans-serif;
 }
