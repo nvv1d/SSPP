@@ -29,9 +29,10 @@ class VoiceService {
       const token = await user.getIdToken();
       
       // Connect to backend WebSocket
-      // In a real implementation, this would connect to your deployed backend
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/voice-chat?token=${token}&character=${character}`;
+      const host = window.location.host;
+      const wsUrl = `${protocol}//${host}/socket.io/?token=${token}&character=${character}&EIO=4&transport=websocket`;
+      console.log("Connecting to WebSocket at:", wsUrl);
       
       this.ws = new WebSocket(wsUrl);
       this.ws.binaryType = 'arraybuffer';
