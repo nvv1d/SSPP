@@ -139,7 +139,7 @@ const CharacterDescription = {
   Miles: "Talk to Miles, your calm and helpful assistant."
 };
 
-const CharacterSelectorComponent = () => {
+const CharacterSelectorComponent = ({ onCharacterSelect }) => {
   const [character, setCharacter] = useState('Maya');
   const [user, setUser] = useState(null);
   
@@ -158,6 +158,9 @@ const CharacterSelectorComponent = () => {
   
   const handleCharacterChange = (newCharacter) => {
     setCharacter(newCharacter);
+    if (onCharacterSelect) {
+      onCharacterSelect(newCharacter);
+    }
   };
   
   const handleGoogleSignIn = async () => {
