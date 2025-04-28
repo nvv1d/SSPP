@@ -38,20 +38,34 @@ class VoiceService {
       this.ws.binaryType = 'arraybuffer';
       
       this.ws.onopen = (event) => {
+        console.log("WebSocket connection opened");
         this.isConnected = true;
         if (this.onOpen) this.onOpen(event);
       };
       
       this.ws.onmessage = (event) => {
-        if (this.onMessage) this.onMessage(event);
+        // Handle Socket.IO protocol messages
+        if (typeof event.data === 'string' && event.data.startsWith('0')) {
+          // Socket.IO handshake
+          console.log("Socket.IO handshake received");
+          this.ws.send('40');  // Socket.IO connect packet
+        } else if (typeof event.data === 'string' && event.data.startsWith('40')) {
+          // Socket.IO connection established
+          console.log("Socket.IO connection established");
+        } else {
+          // Pass other messages to handler
+          if (this.onMessage) this.onMessage(event);
+        }
       };
       
       this.ws.onclose = (event) => {
+        console.log("WebSocket connection closed", event);
         this.isConnected = false;
         if (this.onClose) this.onClose(event);
       };
       
       this.ws.onerror = (event) => {
+        console.error("WebSocket error", event);
         if (this.onError) this.onError(event);
       };
       
@@ -78,7 +92,17 @@ class VoiceService {
       return false;
     }
     
-    this.ws.send(data);
+    // Format binary data for Socket.IO
+    const isBinary = data instanceof ArrayBuffer;
+    
+    if (isBinary) {
+      // For binary data, send as is (Socket.IO will handle it)
+      this.ws.send(data);
+    } else {
+      // For text data, format as Socket.IO message
+      this.ws.send('42["message",'+JSON.stringify(data)+']');
+    }
+    
     return true;
   }
   
