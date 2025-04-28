@@ -5,7 +5,7 @@ import base64
 from datetime import datetime
 
 # Default Firebase API key
-DEFAULT_API_KEY = "AIzaSyDtC7Uwb5pGAsdmrH2T4Gqdk5Mga07jYPM"
+DEFAULT_API_KEY = "AIzaSyCH3_H6dA-Wp_yMrV0hSvyZOtbO4vzGuwY"
 
 # API endpoints
 FIREBASE_AUTH_BASE_URL = "https://identitytoolkit.googleapis.com/v1/accounts"
