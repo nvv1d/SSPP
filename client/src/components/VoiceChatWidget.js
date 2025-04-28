@@ -1,88 +1,75 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { useAuth } from '../context/AuthContext';
+import voiceService from '../api/voiceService';
+import { getAuth } from 'firebase/auth';
 
-const WidgetContainer = styled.div`
+// Styled components
+const Container = styled.div`
   width: 100%;
-  max-width: 600px;
-  border-radius: var(--radius1);
+  max-width: 500px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  margin: 0 auto;
-  border: 1px solid var(--green4);
-`;
-
-const CharacterSelector = styled.div`
-  display: flex;
-  width: 100%;
-  border-bottom: 1px solid var(--green4);
-`;
-
-const CharacterButton = styled.button`
-  width: 50%;
-  padding: 1rem;
-  background-color: ${props => props.active ? 'var(--green6)' : 'white'};
-  border: none;
-  color: var(--green1);
-  font-weight: ${props => props.active ? '600' : '400'};
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: ${props => props.active ? 'var(--green6)' : 'var(--green7)'};
-  }
-`;
-
-const ControlPanel = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: var(--s24);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   background-color: white;
+  padding: 2rem;
 `;
 
-const ControlButton = styled.button`
-  padding: 1rem;
-  border-radius: var(--radius2);
-  background-color: ${props => props.active ? 'var(--green1)' : 'white'};
-  color: ${props => props.active ? 'white' : 'var(--green1)'};
-  border: 1px solid var(--green1);
-  font-weight: 600;
+const Title = styled.h2`
+  margin: 0 0 1.5rem;
+  color: #202124;
+  font-size: 24px;
+  text-align: center;
+`;
+
+const CharacterAvatar = styled.div`
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 1.5rem;
+  background-image: ${props => `url('/characters/${props.character.toLowerCase()}.png')`};
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+const Button = styled.button`
+  width: 100%;
+  padding: 12px;
+  background-color: ${props => props.active ? '#e74c3c' : '#1a73e8'};
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.2s;
   margin-bottom: 1rem;
-  transition: all 0.2s ease;
 
   &:hover {
-    background-color: ${props => props.active ? 'var(--green2)' : 'var(--green7)'};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    background-color: ${props => props.active ? '#c0392b' : '#1665cc'};
   }
 `;
 
 const StatusDisplay = styled.div`
-  background-color: var(--green7);
-  border-radius: var(--radius2);
-  padding: var(--s16);
-  margin-top: var(--s16);
-  display: flex;
-  flex-direction: column;
+  background-color: #f5f9ff;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
 `;
 
 const StatusText = styled.p`
   margin: 0;
-  color: var(--green2);
+  color: #5f6368;
   font-size: 14px;
   line-height: 1.5;
 `;
 
 const VisualIndicator = styled.div`
-  height: 60px;
+  height: 40px;
   width: 100%;
-  border-radius: var(--radius2);
-  margin: var(--s16) 0;
-  background-color: var(--green6);
+  border-radius: 4px;
+  margin: 1rem 0;
+  background-color: #f1f3f4;
   overflow: hidden;
   position: relative;
 
@@ -91,420 +78,227 @@ const VisualIndicator = styled.div`
     position: absolute;
     height: 100%;
     width: ${props => props.active ? '30%' : '0%'};
-    background-color: var(--green3);
+    background-color: ${props => props.active ? '#1a73e8' : 'transparent'};
     left: 50%;
     transform: translateX(-50%);
     transition: width 0.3s ease;
   }
 `;
 
-const DeviceSelector = styled.select`
-  padding: 0.5rem;
-  border-radius: var(--radius2);
-  border: 1px solid var(--green4);
-  margin-bottom: 0.5rem;
-  background-color: white;
-  color: var(--green1);
-`;
-
-const DeviceLabel = styled.label`
-  display: block;
-  margin-bottom: 0.25rem;
-  color: var(--green2);
-  font-size: 14px;
-`;
-
-const PermissionAlert = styled.div`
-  background-color: #fff3cd;
-  color: #856404;
-  padding: 1rem;
-  border-radius: var(--radius2);
-  margin-bottom: 1rem;
-  border: 1px solid #ffeeba;
-`;
-
-const VoiceChatWidget = () => {
-  const { currentUser } = useAuth();
-  const [character, setCharacter] = useState('Maya');
+const VoiceChatWidget = ({ character = 'Maya' }) => {
   const [isListening, setIsListening] = useState(false);
   const [status, setStatus] = useState('Ready to chat');
-  const [audioDevices, setAudioDevices] = useState({ inputs: [], outputs: [] });
-  const [selectedInput, setSelectedInput] = useState('');
-  const [selectedOutput, setSelectedOutput] = useState('');
-  const [permissionDenied, setPermissionDenied] = useState(false);
-  
-  // Refs for audio handling
-  const streamRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const sourceNodeRef = useRef(null);
-  const processorNodeRef = useRef(null);
-  const audioBufferRef = useRef([]);
-  const audioElementRef = useRef(null);
-  const websocketRef = useRef(null);
-  
-  // Visual indicator refs
-  const visualValueRef = useRef(0);
-  const animationFrameRef = useRef(null);
-  const visualIndicatorRef = useRef(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const audioContext = useRef(null);
+  const audioQueue = useRef([]);
+  const audioBufferSource = useRef(null);
 
+  // Set up audio context
   useEffect(() => {
-    if (!currentUser) return;
-    
-    // Create audio element for playback
-    const audioEl = new Audio();
-    audioEl.autoplay = true;
-    audioElementRef.current = audioEl;
-    
-    // Get available audio devices
-    const fetchDevices = async () => {
-      try {
-        // Request permission to access audio
-        await navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(stream => {
-            // Release the stream immediately after getting permission
-            stream.getTracks().forEach(track => track.stop());
-            setPermissionDenied(false);
-          })
-          .catch(err => {
-            console.error("Error getting user media:", err);
-            setPermissionDenied(true);
-            setStatus("Microphone access denied. Please check browser permissions.");
-            return;
-          });
-        
-        // List available devices
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioInputs = devices.filter(device => device.kind === 'audioinput');
-        const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
-        
-        setAudioDevices({ inputs: audioInputs, outputs: audioOutputs });
-
-        if (audioInputs.length > 0) {
-          setSelectedInput(audioInputs[0].deviceId);
-        }
-
-        if (audioOutputs.length > 0) {
-          setSelectedOutput(audioOutputs[0].deviceId);
-        }
-      } catch (err) {
-        console.error("Error enumerating devices:", err);
-        setStatus("Error accessing audio devices. Please check permissions.");
-      }
-    };
-
-    fetchDevices();
-    
-    return () => {
-      // Clean up on unmount
-      stopAudioProcessing();
-      if (websocketRef.current) {
-        websocketRef.current.close();
-      }
-      if (audioElementRef.current) {
-        audioElementRef.current.pause();
-      }
-      cancelAnimationFrame(animationFrameRef.current);
-    };
-  }, [currentUser]);
-
-  const startAudioProcessing = async () => {
     try {
-      // Get user media with selected device
-      const constraints = { 
-        audio: {
-          deviceId: selectedInput ? { exact: selectedInput } : undefined,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      };
-      
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-      
-      // Set up audio context
+      // Create AudioContext when component mounts
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const audioContext = new AudioContext({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      
-      // Create source node from microphone
-      const sourceNode = audioContext.createMediaStreamSource(stream);
-      sourceNodeRef.current = sourceNode;
-      
-      // Create script processor node for audio processing
-      const processorNode = audioContext.createScriptProcessor(2048, 1, 1);
-      processorNodeRef.current = processorNode;
-      
-      // Process audio data
-      processorNode.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        
-        // Calculate RMS for visualization
-        let sum = 0;
-        for (let i = 0; i < inputData.length; i++) {
-          sum += inputData[i] * inputData[i];
-        }
-        const rms = Math.sqrt(sum / inputData.length);
-        visualValueRef.current = rms * 2; // Scale up for better visualization
-        
-        // Send audio data to server if websocket is connected
-        if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-          // Convert Float32Array to Int16Array for transmission
-          const int16Data = new Int16Array(inputData.length);
-          for (let i = 0; i < inputData.length; i++) {
-            // Convert float [-1.0, 1.0] to int16 [-32768, 32767]
-            int16Data[i] = Math.max(-1, Math.min(1, inputData[i])) * 32767;
-          }
-          
-          // Send data as arraybuffer
-          websocketRef.current.send(int16Data.buffer);
+      audioContext.current = new AudioContext();
+
+      return () => {
+        // Clean up AudioContext when component unmounts
+        if (audioContext.current && audioContext.current.state !== 'closed') {
+          audioContext.current.close();
         }
       };
-      
-      // Connect nodes
-      sourceNode.connect(processorNode);
-      processorNode.connect(audioContext.destination);
-      
-      // Start animation for visualization
-      updateVisualIndicator();
-      
-      setStatus(`Connected. Chatting with ${character}...`);
-      
-      // Establish WebSocket connection to backend
-      connectWebSocket();
-      
-    } catch (err) {
-      console.error("Error starting audio processing:", err);
-      setStatus("Error: Could not access microphone. Please check permissions.");
-      setIsListening(false);
+    } catch (error) {
+      console.error('Error setting up AudioContext:', error);
+      setErrorMessage('Your browser does not support audio playback.');
     }
-  };
-  
-  const stopAudioProcessing = () => {
-    // Stop all tracks in the stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    // Disconnect audio nodes
-    if (sourceNodeRef.current && processorNodeRef.current) {
+  }, []);
+
+  // Set up WebSocket connection and handlers
+  useEffect(() => {
+    const setupVoiceService = async () => {
       try {
-        sourceNodeRef.current.disconnect(processorNodeRef.current);
-        processorNodeRef.current.disconnect();
-      } catch (e) {
-        console.log("Error disconnecting audio nodes:", e);
-      }
-    }
-    
-    // Close audio context
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      try {
-        audioContextRef.current.close();
-      } catch (e) {
-        console.log("Error closing audio context:", e);
-      }
-    }
-    
-    // Close WebSocket connection
-    if (websocketRef.current) {
-      websocketRef.current.close();
-      websocketRef.current = null;
-    }
-    
-    // Reset visuals
-    visualValueRef.current = 0;
-    cancelAnimationFrame(animationFrameRef.current);
-    if (visualIndicatorRef.current) {
-      visualIndicatorRef.current.style.width = '0%';
-    }
-  };
-  
-  const connectWebSocket = () => {
-    // For security, API endpoints should be handled through your backend
-    // This is a simplified example - in production, get the WebSocket URL from your server
-    const ws = new WebSocket(`wss://${window.location.host}/api/voice-chat`);
-    
-    ws.binaryType = 'arraybuffer';
-    
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-      // Send initial configuration
-      ws.send(JSON.stringify({
-        type: 'config',
-        character: character,
-        userId: currentUser.uid
-      }));
-    };
-    
-    ws.onmessage = (event) => {
-      // Handle different message types
-      if (typeof event.data === 'string') {
-        try {
-          const message = JSON.parse(event.data);
-          if (message.type === 'status') {
-            setStatus(message.content);
+        setStatus('Connecting...');
+
+        // Set up message handler for audio data
+        voiceService.setMessageHandler((event) => {
+          if (event.data instanceof ArrayBuffer) {
+            handleAudioData(event.data);
+          } else {
+            try {
+              const jsonMessage = JSON.parse(event.data);
+              console.log('Received JSON message:', jsonMessage);
+              // Handle any JSON messages here
+            } catch (e) {
+              // Not a JSON message, might be text
+              console.log('Received text message:', event.data);
+            }
           }
-        } catch (e) {
-          console.error("Error parsing WebSocket message:", e);
-        }
-      } else if (event.data instanceof ArrayBuffer) {
-        // Handle audio data from server
-        const audioData = event.data;
-        
-        // Play the audio
-        const blob = new Blob([audioData], { type: 'audio/wav' });
-        const url = URL.createObjectURL(blob);
-        
-        if (audioElementRef.current) {
-          audioElementRef.current.src = url;
-          
-          // Clean up old object URLs
-          audioElementRef.current.onended = () => {
-            URL.revokeObjectURL(url);
-          };
-        }
+        });
+
+        // Set up close handler
+        voiceService.setCloseHandler(() => {
+          setIsConnected(false);
+          setIsListening(false);
+          setStatus('Connection closed. Try again.');
+          console.log('WebSocket connection closed');
+        });
+
+        // Set up error handler
+        voiceService.setErrorHandler((error) => {
+          setIsConnected(false);
+          setIsListening(false);
+          setStatus('Connection error. Try again.');
+          setErrorMessage('WebSocket error: ' + error.message);
+          console.error('WebSocket error:', error);
+        });
+
+        // Connect to voice service
+        await voiceService.connect(character);
+        setIsConnected(true);
+        setStatus('Connected. Ready to chat!');
+      } catch (error) {
+        console.error('Error connecting to voice service:', error);
+        setIsConnected(false);
+        setStatus('Connection failed. Try again.');
+        setErrorMessage(error.message);
       }
     };
-    
-    ws.onclose = () => {
-      console.log("WebSocket closed");
-      if (isListening) {
-        setStatus("Connection lost. Try again.");
+
+    setupVoiceService();
+
+    return () => {
+      // Clean up voice service when component unmounts
+      voiceService.disconnect();
+    };
+  }, [character]);
+
+  // Handle audio data received from the server
+  const handleAudioData = async (arrayBuffer) => {
+    if (!audioContext.current) return;
+
+    try {
+      // Add the buffer to the queue
+      audioQueue.current.push(arrayBuffer);
+
+      // If we're not currently playing, start playing
+      if (!audioBufferSource.current) {
+        playNextAudio();
       }
-    };
-    
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      setStatus("Error: Connection failed.");
-    };
-    
-    websocketRef.current = ws;
-  };
-  
-  const updateVisualIndicator = () => {
-    if (visualIndicatorRef.current) {
-      const value = visualValueRef.current;
-      // Scale and clamp value to reasonable range for display
-      const scaledValue = Math.min(100, Math.max(0, value * 100));
-      visualIndicatorRef.current.style.width = `${scaledValue}%`;
+    } catch (error) {
+      console.error('Error handling audio data:', error);
     }
-    
-    animationFrameRef.current = requestAnimationFrame(updateVisualIndicator);
   };
 
-  const toggleListening = () => {
-    if (isListening) {
-      // Stop listening
-      stopAudioProcessing();
+  // Play the next audio in the queue
+  const playNextAudio = async () => {
+    if (audioQueue.current.length === 0) {
+      audioBufferSource.current = null;
+      return;
+    }
+
+    try {
+      const arrayBuffer = audioQueue.current.shift();
+      const audioBuffer = await audioContext.current.decodeAudioData(arrayBuffer);
+
+      audioBufferSource.current = audioContext.current.createBufferSource();
+      audioBufferSource.current.buffer = audioBuffer;
+      audioBufferSource.current.connect(audioContext.current.destination);
+
+      audioBufferSource.current.onended = () => {
+        audioBufferSource.current = null;
+        playNextAudio();
+      };
+
+      audioBufferSource.current.start();
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      audioBufferSource.current = null;
+      playNextAudio(); // Skip problematic audio
+    }
+  };
+
+  // Toggle listening state
+  const toggleListening = async () => {
+    if (!isConnected) {
+      setStatus('Not connected. Please wait...');
+      return;
+    }
+
+    try {
+      if (!isListening) {
+        setStatus('Starting microphone...');
+
+        // Check if browser supports getUserMedia
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Your browser does not support audio recording');
+        }
+
+        // Request microphone access
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Create audio processor to capture microphone data
+        const mediaRecorder = new MediaRecorder(stream);
+
+        // Send audio data to server when available
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0 && isListening) {
+            event.data.arrayBuffer().then(buffer => {
+              voiceService.send(buffer);
+            });
+          }
+        };
+
+        // Set up recording interval
+        mediaRecorder.start(250);
+
+        // Store mediaRecorder in a ref for cleanup
+        window.mediaRecorder = mediaRecorder;
+
+        setIsListening(true);
+        setStatus('Listening...');
+      } else {
+        // Stop recording
+        if (window.mediaRecorder && window.mediaRecorder.state !== 'inactive') {
+          window.mediaRecorder.stop();
+          window.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+          window.mediaRecorder = null;
+        }
+
+        setIsListening(false);
+        setStatus('Ready to chat');
+      }
+    } catch (error) {
+      console.error('Error toggling microphone:', error);
       setIsListening(false);
-      setStatus("Chat ended");
-    } else {
-      // Start listening
-      setIsListening(true);
-      setStatus(`Connecting to ${character}...`);
-      startAudioProcessing();
+      setStatus('Microphone error');
+      setErrorMessage(error.message);
     }
   };
 
-  const handleCharacterChange = (newCharacter) => {
-    setCharacter(newCharacter);
-    
-    // If already chatting, reconnect with new character
-    if (isListening) {
-      stopAudioProcessing();
-      setStatus(`Switching to ${newCharacter}...`);
-      setTimeout(() => {
-        startAudioProcessing();
-      }, 500);
-    }
-  };
-
-  // This function would require a full implementation of the backend
-  // For demonstration, we're showing a simplified version
-  const handleOutputDeviceChange = (deviceId) => {
-    setSelectedOutput(deviceId);
-    
-    // Set audio output device if supported
-    if (audioElementRef.current && audioElementRef.current.setSinkId) {
-      audioElementRef.current.setSinkId(deviceId)
-        .catch(e => console.error("Error setting audio output device:", e));
-    }
-  };
+  // Get user name
+  const auth = getAuth();
+  const userName = auth.currentUser ? auth.currentUser.displayName : 'User';
 
   return (
-    <WidgetContainer>
-      <CharacterSelector>
-        <CharacterButton 
-          active={character === 'Maya'} 
-          onClick={() => handleCharacterChange('Maya')}
-        >
-          Maya
-        </CharacterButton>
-        <CharacterButton 
-          active={character === 'Miles'} 
-          onClick={() => handleCharacterChange('Miles')}
-        >
-          Miles
-        </CharacterButton>
-      </CharacterSelector>
+    <Container>
+      <Title>Chat with {character}</Title>
+      <CharacterAvatar character={character} />
 
-      <ControlPanel>
-        {permissionDenied && (
-          <PermissionAlert>
-            Microphone access is required. Please allow microphone access in your browser settings and reload the page.
-          </PermissionAlert>
-        )}
-      
-        <DeviceLabel>Input Device:</DeviceLabel>
-        <DeviceSelector 
-          value={selectedInput}
-          onChange={(e) => setSelectedInput(e.target.value)}
-          disabled={isListening}
-        >
-          {audioDevices.inputs.map(device => (
-            <option key={device.deviceId} value={device.deviceId}>
-              {device.label || `Microphone ${device.deviceId.substring(0, 5)}...`}
-            </option>
-          ))}
-        </DeviceSelector>
+      <Button 
+        onClick={toggleListening} 
+        active={isListening}
+        disabled={!isConnected}
+      >
+        {isListening ? 'Stop Listening' : 'Start Listening'}
+      </Button>
 
-        <DeviceLabel>Output Device:</DeviceLabel>
-        <DeviceSelector 
-          value={selectedOutput}
-          onChange={(e) => handleOutputDeviceChange(e.target.value)}
-          disabled={isListening}
-        >
-          {audioDevices.outputs.map(device => (
-            <option key={device.deviceId} value={device.deviceId}>
-              {device.label || `Speaker ${device.deviceId.substring(0, 5)}...`}
-            </option>
-          ))}
-        </DeviceSelector>
-
-        <ControlButton 
-          active={isListening}
-          onClick={toggleListening}
-          disabled={permissionDenied}
-        >
-          {isListening ? "End Chat" : "Start Chat"}
-        </ControlButton>
-
-        <VisualIndicator 
-          active={isListening} 
-          ref={visualIndicatorRef}
-        />
-
-        <StatusDisplay>
-          <StatusText>{status}</StatusText>
-          <StatusText>
-            {isListening 
-              ? "Speak naturally. The AI is listening..." 
-              : "Press 'Start Chat' to begin a conversation"}
-          </StatusText>
-        </StatusDisplay>
-      </ControlPanel>
-    </WidgetContainer>
+      <StatusDisplay>
+        <StatusText>Status: {status}</StatusText>
+        {errorMessage && <StatusText style={{ color: '#e74c3c' }}>Error: {errorMessage}</StatusText>}
+        <VisualIndicator active={isListening} />
+        <StatusText>{isConnected ? `Connected as ${userName}` : 'Disconnected'}</StatusText>
+      </StatusDisplay>
+    </Container>
   );
 };
 
