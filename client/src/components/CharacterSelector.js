@@ -1,38 +1,51 @@
 
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
+// Animation keyframes
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+// Styled components
 const Container = styled.div`
   width: 100%;
-  max-width: 600px;
-  border-radius: var(--radius1);
+  max-width: 500px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  margin: 0 auto;
-  border: 1px solid var(--green4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  animation: ${fadeIn} 0.5s ease;
 `;
 
 const CharacterSelector = styled.div`
   display: flex;
   width: 100%;
-  border-bottom: 1px solid var(--green4);
+  border-bottom: 1px solid #e0e0e0;
 `;
 
 const CharacterButton = styled.button`
   width: 50%;
-  padding: 1rem;
-  background-color: ${props => props.active ? 'var(--green6)' : 'white'};
+  padding: 1.2rem 0;
+  background-color: ${props => props.active ? '#f5f9ff' : 'white'};
   border: none;
-  color: var(--green1);
+  color: ${props => props.active ? '#1a73e8' : '#5f6368'};
   font-weight: ${props => props.active ? '600' : '400'};
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  overflow: hidden;
 
   &:hover {
-    background-color: ${props => props.active ? 'var(--green6)' : 'var(--green7)'};
+    background-color: ${props => props.active ? '#f5f9ff' : '#f8f9fa'};
   }
   
   &::after {
@@ -42,62 +55,89 @@ const CharacterButton = styled.button`
     left: 0;
     width: ${props => props.active ? '100%' : '0'};
     height: 3px;
-    background-color: var(--green1);
+    background-color: #1a73e8;
     transition: width 0.3s ease;
   }
 `;
 
-const SignInSection = styled.div`
-  padding: 1.5rem;
+const ContentSection = styled.div`
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: white;
-`;
-
-const GoogleButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: var(--radius2);
-  font-weight: 500;
-  color: #444;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  
-  &:hover {
-    background-color: #f8f8f8;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  }
-  
-  img {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-  }
+  text-align: center;
 `;
 
 const AnimatedAvatar = styled.div`
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background-color: var(--green6);
-  margin: 20px 0;
+  margin: 1rem 0 1.5rem;
   background-image: ${props => `url('/characters/${props.character.toLowerCase()}.png')`};
   background-size: cover;
   background-position: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: ${pulse} 2s infinite ease-in-out;
+  transition: transform 0.3s ease;
   
-  ${props => props.active && `
+  &:hover {
     transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  `}
+  }
 `;
+
+const CharacterTitle = styled.h2`
+  margin: 0 0 0.5rem;
+  color: #202124;
+  font-size: 24px;
+`;
+
+const CharacterSubtitle = styled.p`
+  margin: 0 0 2rem;
+  color: #5f6368;
+  font-size: 16px;
+`;
+
+const GoogleSignInButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  background-color: white;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  }
+  
+  img {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+const UserInfo = styled.div`
+  margin-top: 1rem;
+  font-size: 16px;
+  color: #3c4043;
+  
+  p {
+    margin: 8px 0;
+  }
+`;
+
+const CharacterDescription = {
+  Maya: "Chat with Maya, your friendly and knowledgeable assistant.",
+  Miles: "Talk to Miles, your calm and helpful assistant."
+};
 
 const CharacterSelectorComponent = () => {
   const [character, setCharacter] = useState('Maya');
@@ -149,21 +189,23 @@ const CharacterSelectorComponent = () => {
         </CharacterButton>
       </CharacterSelector>
       
-      <SignInSection>
-        <AnimatedAvatar character={character} active={true} />
+      <ContentSection>
+        <AnimatedAvatar character={character} />
+        <CharacterTitle>{character}</CharacterTitle>
+        <CharacterSubtitle>{CharacterDescription[character]}</CharacterSubtitle>
         
         {!user ? (
-          <GoogleButton onClick={handleGoogleSignIn}>
+          <GoogleSignInButton onClick={handleGoogleSignIn}>
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
             Sign in with Google
-          </GoogleButton>
+          </GoogleSignInButton>
         ) : (
-          <div style={{ textAlign: 'center' }}>
+          <UserInfo>
             <p>Signed in as {user.displayName}</p>
             <p>Ready to chat with {character}</p>
-          </div>
+          </UserInfo>
         )}
-      </SignInSection>
+      </ContentSection>
     </Container>
   );
 };
