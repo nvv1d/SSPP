@@ -1,53 +1,65 @@
 
 import React from 'react';
 import styled from 'styled-components';
+import { useAuth } from '../context/AuthContext';
 
 const HeaderContainer = styled.header`
-  width: 100%;
-  padding: 1rem 2rem;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
+  background-color: white;
+  padding: var(--s20) var(--s28);
+  border-bottom: 1px solid var(--green5);
+`;
+
+const HeaderContent = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
 const Logo = styled.div`
-  font-size: 1.8rem;
-  font-weight: bold;
-  background: linear-gradient(45deg, #f06, #3cf);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-`;
-
-const Nav = styled.nav`
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--green1);
   display: flex;
-  gap: 2rem;
-`;
-
-const NavLink = styled.a`
-  color: #fff;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
+  align-items: center;
   
-  &:hover {
-    color: #3cf;
+  svg {
+    margin-right: 10px;
   }
 `;
 
-function Header() {
+const UserSection = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const UserName = styled.span`
+  margin-right: 1rem;
+  font-weight: 500;
+  color: var(--green2);
+`;
+
+const Header = () => {
+  const { currentUser } = useAuth();
+  
   return (
     <HeaderContainer>
-      <Logo>Sesame Voice AI</Logo>
-      <Nav>
-        <NavLink href="#">Home</NavLink>
-        <NavLink href="https://github.com/ijub/sesame_ai" target="_blank">GitHub</NavLink>
-        <NavLink href="#about">About</NavLink>
-      </Nav>
+      <HeaderContent>
+        <Logo>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 21 24" width="21" height="24">
+            <path fill="currentColor" d="M20.556 11.936V23.87c-2.16 0-4.184-.582-5.93-1.598a11.94 11.94 0 0 1-5.93-10.337V0c2.16 0 4.184.582 5.93 1.598a11.94 11.94 0 0 1 5.93 10.338M2.926.798A5.7 5.7 0 0 0 0 0v5.968a5.99 5.99 0 0 0 2.925 5.169c.86.509 1.86.798 2.925.798V5.969A5.99 5.99 0 0 0 2.925.798"></path>
+          </svg>
+          Sesame
+        </Logo>
+        <UserSection>
+          {currentUser && (
+            <UserName>{currentUser.displayName}</UserName>
+          )}
+        </UserSection>
+      </HeaderContent>
     </HeaderContainer>
   );
-}
+};
 
 export default Header;
