@@ -12,20 +12,20 @@ const LoginContainer = styled.div`
 `;
 
 const AuthButton = styled.button`
-  background: linear-gradient(45deg, #3cf, #f06);
+  background: var(--green1);
   border: none;
   color: white;
   padding: 0.75rem 1.5rem;
-  border-radius: 50px;
+  border-radius: var(--radius2);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   
   &:hover {
+    background: var(--green2);
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   }
   
   &:active {
@@ -34,10 +34,10 @@ const AuthButton = styled.button`
 `;
 
 const UserInfo = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: var(--green7);
+  border: 1px solid var(--green4);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius2);
   margin-top: 1rem;
   display: flex;
   align-items: center;
@@ -48,43 +48,39 @@ const Avatar = styled.img`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 2px solid #3cf;
+  border: 2px solid var(--green3);
 `;
 
 const UserName = styled.span`
   font-weight: 600;
-  color: white;
+  color: var(--green1);
 `;
 
-function Login() {
+const Login = () => {
   const { currentUser } = useAuth();
-  
+
   const handleSignIn = async () => {
-    console.log("Sign in button clicked");
     try {
-      const user = await signInWithGoogle();
-      console.log("Sign in completed, user:", user);
+      await signInWithGoogle();
     } catch (error) {
-      console.error("Login component error:", error);
+      console.error("Error signing in:", error);
     }
   };
-  
+
   const handleSignOut = async () => {
-    console.log("Sign out button clicked");
     try {
       await signOutUser();
-      console.log("Sign out completed");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Error signing out:", error);
     }
   };
-  
+
   return (
     <LoginContainer>
       {currentUser ? (
         <>
           <UserInfo>
-            <Avatar src={currentUser.photoURL} alt={currentUser.displayName} />
+            {currentUser.photoURL && <Avatar src={currentUser.photoURL} alt={currentUser.displayName} />}
             <UserName>{currentUser.displayName}</UserName>
           </UserInfo>
           <AuthButton onClick={handleSignOut} style={{ marginTop: '1rem' }}>
@@ -98,6 +94,6 @@ function Login() {
       )}
     </LoginContainer>
   );
-}
+};
 
 export default Login;
