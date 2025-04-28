@@ -1,104 +1,65 @@
 import React from 'react';
+import { GoogleLogin } from 'react-google-login';
 import styled from 'styled-components';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import VoiceChatWidget from './components/VoiceChatWidget';
-import Login from './components/Login';
-import { AuthProvider, useAuth } from './context/AuthContext';
 
-const AppContainer = styled.div`
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: white;
-  color: var(--green1);
-`;
 
-const MainContent = styled.main`
-  flex: 1;
+const CharacterSelectorContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
+  /* Add Sesame's color scheme and styles here */
+  background-color: #f0f0f0; /* Example color */
 `;
 
-const HeroSection = styled.section`
+const CharacterButton = styled.button`
+  background-color: #4CAF50; /* Example color */
+  color: white;
+  padding: 15px 32px;
   text-align: center;
-  margin-bottom: 3rem;
-`;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
 
-const Title = styled.h1`
-  font-size: 3rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-  color: var(--green1);
-
-  @media (max-width: 768px) {
-    font-size: 2rem;
+  &:hover {
+    background-color: #3e8e41;
   }
 `;
 
-const Subtitle = styled.p`
-  font-size: 1.2rem;
-  max-width: 600px;
-  margin: 0 auto;
-  color: var(--green2);
 
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-`;
+const CharacterSelector = () => {
+  return (
+    <CharacterSelectorContainer>
+      <h1>Select Your Character</h1>
+      <CharacterButton>Character 1</CharacterButton>
+      <CharacterButton>Character 2</CharacterButton>
+      <CharacterButton>Character 3</CharacterButton>
+      <GoogleLogin
+        clientId="YOUR_GOOGLE_CLIENT_ID" // Replace with your Google Client ID
+        buttonText="Sign in with Google"
+        onSuccess={responseGoogle}
+        onFailure={responseGoogle}
+        cookiePolicy={'single_host_origin'}
+      />
+    </CharacterSelectorContainer>
+  );
+};
 
-const AuthMessage = styled.div`
-  text-align: center;
-  padding: 2rem;
-  background: var(--green7);
-  border: 1px solid var(--green4);
-  border-radius: var(--radius2);
-  margin: 2rem 0;
-  max-width: 500px;
-  width: 100%;
-`;
+const responseGoogle = (response) => {
+  console.log(response);
+}
+
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-}
-
-function AppContent() {
-  const { currentUser } = useAuth();
-
-  return (
-    <AppContainer>
-      <Header />
-      <MainContent>
-        <HeroSection>
-          <Title>Sesame Voice AI</Title>
-          <Subtitle>
-            Experience natural voice conversations with our AI characters.
-            Get information, have discussions, or just chat with Maya or Miles.
-          </Subtitle>
-        </HeroSection>
-
-        {currentUser ? (
-          <VoiceChatWidget />
-        ) : (
-          <AuthMessage>
-            <h2>Welcome to Sesame Voice AI</h2>
-            <p>Sign in to start a voice conversation with our AI companions.</p>
-            <Login />
-          </AuthMessage>
-        )}
-      </MainContent>
-      <Footer />
-    </AppContainer>
+    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+      <CharacterSelector />
+    </div>
   );
 }
 
